@@ -41,6 +41,45 @@ const TeacherController = {
     }
   },
 
+  UpdateCourse: async (req, res, next) => {
+    const { course_name, course_description, courseId } = req.body;
+    const existingCourse = await Course.findOne({
+      id: courseId,
+    });
+    console.log("existingCourse :", existingCourse);
+    if (existingCourse) {
+      
+      const updateCourse = await Course.updateOne(
+        {id:courseId},
+        {course_name: course_name, course_description:course_description},
+        {new:true}
+      )
+
+      // const updateCourse = await Course.findByIdAndUpdate(
+      //   courseId,
+      //   {
+      //     course_name: course_name,
+      //     course_description: course_description,
+      //   },
+      //   { new: true }
+      // );
+      console.log("updateCourse :", updateCourse);
+      return res.status(200).json({
+        success: true,
+        msg: "update Khoá Học Thành Công !",
+        updateCourse,
+      });
+    } else {
+      return res
+        .status(300)
+        .json({ success: false, msg: "K tìm thấy Khoá Học  !!!" });
+    }
+  },
+
+  deleteCourse :async (req, res, next) => {
+
+  },
+
   postCreateSchoolYears: async (req, res, next) => {
     try {
       const { nameSchoolYear } = req.body;
@@ -130,27 +169,70 @@ const TeacherController = {
   },
 
   postCreateTheory: async (req, res, next) => {
-    const { nameQuestion, answer } = req.body;
-    const Theory = [
-      {
-        nameQuestion: nameQuestion,
-        answer: answer,
-      },
-    ];
-    console.log(Theory);
+    const { nameQuestion, answer, Topic_id } = req.body;
+    const getTopicDetail = await TopicLecure.findOne({ id: Topic_id });
+    const getTheoryExist = await theory.findOne({ Topic_id: Topic_id });
+    console.log(getTopicDetail);
+    if (Topic_id) {
+      if (getTheoryExist) {
+        getTheoryExist.Theory.push({
+          nameQuestion: nameQuestion,
+          answer: answer,
+        });
 
-    const createTheory = await theory.create(Theory);
-    console.log(createTheory);
-    return res
-      .status(200)
-      .json({ success: true, msg: "Thêm Topic thành công !" , createTheory });
+        // Save the updated document
+        await getTheoryExist.save();
+        return res.status(200).json({
+          success: true,
+          msg: "Thêm theory thành công!",
+          createdTheory: getTheoryExist,
+        });
+      } else {
+        const Theory = [
+          {
+            nameQuestion: nameQuestion,
+            answer: answer,
+          },
+        ];
+        console.log(Theory);
+
+        const createdTheory = await theory.create({
+          Theory: [
+            {
+              nameQuestion: nameQuestion,
+              answer: answer,
+            },
+          ],
+          Topic_id: Topic_id,
+        });
+        console.log(createdTheory);
+        return res.status(200).json({
+          success: true,
+          msg: "tạo theory thành công !",
+          createdTheory,
+        });
+      }
+    } else {
+      return res.status(300).json({
+        success: false,
+        msg: " error not found topic to create theory !",
+      });
+    }
   },
 
-  
+  getAllTheory: async (req, res, next) => {
+    const { Topic_id } = req.body;
+    const getListTheory = await theory.findOne({ Topic_id: Topic_id });
+    console.log(getListTheory);
 
-  PostCreateExam : async (req, res , next) => {
-    const {nameExam } = req.body
-  }
+    return res
+      .status(200)
+      .json({ success: true, msg: "get theory thành công !", getListTheory });
+  },
+
+  PostCreateExam: async (req, res, next) => {
+    const { nameExam } = req.body;
+  },
 
   // postChangePassword: async (req, res, next) => {
 

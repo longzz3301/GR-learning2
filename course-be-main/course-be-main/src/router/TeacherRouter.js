@@ -8,9 +8,13 @@ const teacherRole = require('../middleware/TeacherRole');
 router.post('/create-Course',teacherRole  , TeacherController.postCreateCourse)  //teacherRole
 router.post('/create-SchoolYears/:CourseId',teacherRole  , TeacherController.postCreateSchoolYears) 
 router.post('/create-Lecture/:CourseId/:YearsId',teacherRole  , TeacherController.postCreateLecture) 
-router.post('/create-topic', teacherRole, TeacherController.postCreateTopicLecture) 
+router.post('/create-topic', TeacherController.postCreateTopicLecture) 
 router.post('/create-theory' , TeacherController.postCreateTheory) 
 router.post('/create-exam' ) 
+
+router.patch('/update-Course' , TeacherController.UpdateCourse)
+
+router.get("/get-theory" ,TeacherController.getAllTheory )
 
 // router.get('/all-course', teacherRole, TeacherController.getAllCourse);
 // router.get('/all-subject', teacherRole, TeacherController.getAllSubject);
