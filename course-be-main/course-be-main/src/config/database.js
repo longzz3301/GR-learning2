@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 // const uri_compass = "mongodb://localhost:27017/server-khoa-hoc"
 // const uri_atlas = "mongodb+srv://MealsTxuphong:Xuanphong123@cluster0.pyld4tk.mongodb.net/server-khoa-hoc?retryWrites=true&w=majority";
-const uri_atlas = "mongodb://localhost:27017/GR-learning"
+const uri_atlas = "mongodb://localhost:27017/GR-learningTEST-1"
 async function connect() {
     try {
         await mongoose.set('strictQuery', true);

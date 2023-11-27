@@ -2,7 +2,8 @@ const jwt = require('jsonwebtoken');
 const jwt_decode = require('jwt-decode');
 const Account = require('../model/Account');
 module.exports = teacherRole = async (req, res, next) => {
-    const token = req.headers['authorization'];
+    const token = req.headers.authorization?.split(" ")[1];
+    // const token = req.headers['authorization'];
     const token_decode = jwt_decode(token);
     await Account.findOne({ email: token_decode.email }).then(async account => {
         if (!account) {

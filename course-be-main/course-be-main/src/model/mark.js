@@ -41,15 +41,12 @@ const Schema = mongoose.Schema;
 // const slug = require('mongoose-slug-generator');
 // mongoose.plugin(slug);
 const MarkModel = new Schema({
-    student_email: {
+    student_id: {
         type: String,
         required: true,
     },
-    lecture_name: {
-        type: String,
-        required: true,
-    },
-    course_name: {
+    
+    exam_id: {
         type: String,
         required: true,
     },

@@ -3,20 +3,7 @@ const Schema = mongoose.Schema;
 const slug = require('mongoose-slug-generator');
 mongoose.plugin(slug);
 const CourseModel = new Schema({
-    // teacher_email: {
-    //     type: String,
-    //     required: true,
-    // },
-    // course_id: {
-    //     type: String,
-    //     required: true,
-    //     unique: true
-    // },
-    // sub_id: {
-    //     type: String,
-    //     // required: true,
-    //     // unique: true
-    // },
+    
     course_name: {
         type: String,
         required: true,
@@ -25,10 +12,7 @@ const CourseModel = new Schema({
         type: String,
         required: true
     },
-    course_price: {
-        type: String,
-        required: true
-    },
+    
     // dateStart: {
     //     type: String,
     //     // required: true

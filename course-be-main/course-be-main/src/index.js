@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({
 }));
 // app.use(fileUpload());
 app.use(cors());
-app.use(cors({ origin: ['http://localhost:3001','http://localhost:3000'], credentials: true }));
+app.use(cors({ origin: ['http://localhost:3000'], credentials: true }));
 app.use(function (req, res, next) {
     res.header('Access-Control-Allow-Credentials', true);
     res.header('Access-Control-Allow-Origin', req.headers.origin);
@@ -37,21 +37,21 @@ const database = require('./config/database');
 const Account = require('./controller/AccountController');
 database.connect();
 // CONTROLLER
-const AccountController = require('./controller/AccountController');
+// const AccountController = require('./controller/AccountController');
 const TeacherController = require('./controller/TeacherController');
-const AdminController = require('./controller/AdminController');
+// const AdminController = require('./controller/AdminController');
 // ROUTER
 const AccountRouter = require('./router/AccountRouter');
-const StudentRouter = require('./router/StudentRouter');
+// const StudentRouter = require('./router/StudentRouter');
 const TeacherRouter = require('./router/TeacherRouter');
-const AdminRouter = require('./router/AdminRouter');
+// const AdminRouter = require('./router/AdminRouter');
 
 
 
 app.use('/api/account', AccountRouter);
-app.use('/api/student', StudentRouter);
+// app.use('/api/student', StudentRouter);
 app.use('/api/teacher', TeacherRouter);
-app.use('/api/admin', AdminRouter);
+// app.use('/api/admin', AdminRouter);
 
 app.listen(port, () => {
     console.log(`server is running in port ${port}`)

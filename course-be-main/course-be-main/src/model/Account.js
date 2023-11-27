@@ -37,10 +37,11 @@ const AccountModel = new Schema({
     //     type: Boolean,
     //     default: false
     // },
-    status: {
-        type: Boolean,
-        default: true
+    lectureID: {
+        type: String
     }
+    
+    
 
 }, {
     timestamps: true
