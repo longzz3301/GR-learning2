@@ -30,6 +30,8 @@ app.use(express.urlencoded({
 }));
 app.use(cookieParser('ddn'));
 app.use(express.static(path.join(__dirname, 'public')));
+// comment
+// khanhdt 123
 
 
 // DATABASE
