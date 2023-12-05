@@ -60,4 +60,4 @@ const MarkModel = new Schema({
 }, {
     timestamps: true
 });
-module.exports = mongoose.model("mark", MarkModel);
+module.exports = mongoose.model("mark_Topic", MarkModel);

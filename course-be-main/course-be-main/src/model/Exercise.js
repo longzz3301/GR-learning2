@@ -3,10 +3,7 @@ const Schema = mongoose.Schema;
 const slug = require('mongoose-slug-generator');
 mongoose.plugin(slug);
 const ExerciseModel = new Schema({
-    exam_name : {
-        type: String,
-        required: true,
-    },
+    
 
     topic_id : {
         type: String,

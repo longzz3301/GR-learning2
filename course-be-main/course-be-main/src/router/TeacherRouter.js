@@ -5,31 +5,41 @@ const teacherRole = require('../middleware/TeacherRole');
 // const upload_course = require('../middleware/multerCourse');
 
 
-router.post('/create-Course',teacherRole  , TeacherController.postCreateCourse)  //teacherRole
-router.post('/create-SchoolYears/:CourseId',teacherRole  , TeacherController.postCreateSchoolYears) 
-router.post('/create-Lecture/:CourseId/:YearsId',teacherRole  , TeacherController.postCreateLecture) 
-router.post('/create-topic', TeacherController.postCreateTopicLecture) 
-router.post('/create-theory' , TeacherController.postCreateTheory) 
-router.post('/create-exam' ) 
-
+// CRUD Course
+router.post('/create-course',teacherRole  , TeacherController.postCreateCourse)  //teacherRole
 router.patch('/update-Course' , TeacherController.UpdateCourse)
+router.delete('/delete-course' , TeacherController.deleteCourse)
+router.delete('/delete-allcourse', TeacherController.deleteAllCoursse )
+router.get('/get-listcourse', TeacherController.getListCourse)
+
+
+// CRUD School Year
+
+
+router.post('/create-schoolYears/:courseid'  , TeacherController.postCreateSchoolYears) 
+router.patch('/update-schoolYears' , TeacherController.updateSchoolYears)
+router.delete('/delete-SchoolYear' ,TeacherController.deleteSchoolYear )
+
+
+// CRUD lecture 
+router.post('/create-lecture/:courseid/:yearsid'  , TeacherController.postCreateLecture) 
+router.post('')
+
+
+//CRUD topic 
+router.post('/create-topic', TeacherController.postCreateTopicLecture) 
+
+// CRUD theory
+router.post('/create-theory' , TeacherController.postCreateTheory) 
+router.get('/get-listTheory' , TeacherController.getAllTheory)
+
+//CRUD exam 
+router.post('/create-exam'  , TeacherController.PostCreateExam) 
+
 
 router.get("/get-theory" ,TeacherController.getAllTheory )
 
-// router.get('/all-course', teacherRole, TeacherController.getAllCourse);
-// router.get('/all-subject', teacherRole, TeacherController.getAllSubject);
-// router.get('/delete-subject/:_id', teacherRole, TeacherController.deleteSubject);
-// router.get('/delete-course/:_id', teacherRole, TeacherController.deleteCourse);
-// router.get('/course/:_id', teacherRole, TeacherController.getCourse);
-// router.get('/search-course/:key', teacherRole, TeacherController.searchCourse);
-// router.get('/course-detail/:slug', TeacherController.getCourseDetail);
-// router.get('/course-detail/lecture/:id', TeacherController.getLecture);
-// router.get('/delete-lecture/:_id', teacherRole, TeacherController.getDelLecture);
-// router.get('/course/lecture-detail/:slug', teacherRole, TeacherController.getLectureDetail);
-// router.get('/course/lecture/exercise/delete-exercise/:id', teacherRole, TeacherController.getDelEx);
-// router.get('/delete-student/:_id', teacherRole, TeacherController.deleteStudent);
-// // router.get('/get-mark/:param1/:param2', TeacherController.getMarkStudent);
-// router.get('/get-mark', TeacherController.getMarkStudent);
+
 
 // router.post('/create-course', upload_course.single('image'), TeacherController.postCreateCourse);
 // router.post('/edit-course', teacherRole, TeacherController.postEditCourse);

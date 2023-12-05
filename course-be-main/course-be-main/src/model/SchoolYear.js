@@ -9,6 +9,12 @@ const SchoolYearModel = new Schema({
     courseId : {
         type: String , 
         require: true 
+    },
+
+    level : {
+        type: Number ,
+        require: true
+
     }
 
 

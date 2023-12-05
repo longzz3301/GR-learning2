@@ -9,11 +9,14 @@ const MarkModelST = require("../model/mark");
 const jwt = require("jsonwebtoken");
 const jwt_decode = require("jwt-decode");
 const fs = require("fs-extra");
-const SchoolYear = require("../model/Schoolyear");
+// const SchoolYear = require("../model/Schoolyear");
 const TopicLecure = require("../model/TopicLecure");
 const theory = require("../model/theory");
+const Theory = require("../model/theory");
+const SchoolYear = require("../model/SchoolYear");
 
 const TeacherController = {
+  // CRUD Course
   postCreateCourse: async (req, res, next) => {
     const { course_name, course_description } = req.body;
     // const token = req.headers.authorization?.split(" ")[1];
@@ -48,12 +51,11 @@ const TeacherController = {
     });
     console.log("existingCourse :", existingCourse);
     if (existingCourse) {
-      
       const updateCourse = await Course.updateOne(
-        {id:courseId},
-        {course_name: course_name, course_description:course_description},
-        {new:true}
-      )
+        { id: courseId },
+        { course_name: course_name, course_description: course_description },
+        { new: true }
+      );
 
       // const updateCourse = await Course.findByIdAndUpdate(
       //   courseId,
@@ -76,24 +78,110 @@ const TeacherController = {
     }
   },
 
-  deleteCourse :async (req, res, next) => {
+  deleteCourse: async (req, res, next) => {
+    const { courseId } = req.body;
 
+    const getLecture = await Lecture.find({ CourseID: courseId });
+
+    const listid_Lecture = getLecture.map((list_id) => list_id.id);
+
+    const findListTopic = await TopicLecure.find({
+      Lecture_ID: { $in: listid_Lecture },
+    });
+
+    const getIdTopic = findListTopic.map((idTopic) => idTopic.id);
+
+    //delet theory of topic of lecture of course
+
+    const deleteTheory = await theory.deleteMany({
+      Topic_id: { $in: getIdTopic },
+    });
+    //delete topic of Lecture of course
+
+    const deleteTopics = await TopicLecure.deleteMany({
+      Lecture_ID: { $in: listid_Lecture },
+    });
+
+    // delete lecture of Course
+    const deletelecture = await Lecture.deleteMany({ courseId: courseId });
+
+    //delete Schoole Years of course
+    const deleteSchoolYear = await SchoolYear.deleteMany({
+      courseId: courseId,
+    });
+
+    //delete Course
+    const deletecourse = await Course.findByIdAndDelete(courseId);
+    const getid_SchoolYear = await SchoolYear.find({ courseId: courseId });
+
+    //delet exam  of topic of lecture of course
+
+    // const getAllExam = await Exercise.find({});
+    // const filteredExam = getAllExam.filter((Exam) =>
+    //   getlistIdTopics.includes(Exam.topic_id)
+    // );
+    // const ExamId = getLecture.map((list_id) => list_id.id);
+    // const deleteExam = await TopicLecure.deleteMany({
+    //   Lecture_ID: { $in: ExamId },
+    // });
+    // console.log("filteredExam :", ExamId);
+
+    return res.status(200).json({
+      success: true,
+      msg: "delete Khoá Học Thành Công !",
+    });
   },
 
+  deleteAllCoursse: async (req, res, next) => {
+    const { courseId } = req.body;
+    const deletecourse = await Course.deleteMany({});
+    const deletelecture = await Lecture.deleteMany({});
+    const deleteSchoolYear = await SchoolYear.deleteMany({});
+    const deleteTopics = await TopicLecure.deleteMany({});
+    const deleteTheory = await Theory.deleteMany({});
+    const deleteExam = await Exercise.deleteMany({});
+    return res.status(200).json({
+      success: true,
+      msg: "delete all Khoá Học Thành Công !",
+    });
+  },
+
+  getListCourse: async (req, res, next) => {
+    const getListCourse = await Course.find({});
+    return res.status(200).json({
+      success: true,
+      msg: "get  all Khoá Học Thành Công !",
+      getListCourse,
+    });
+  },
+
+  // CRUD School Years
+
   postCreateSchoolYears: async (req, res, next) => {
-    try {
-      const { nameSchoolYear } = req.body;
-      const courseId = req.params.CourseId;
-      const getCourse = await Course.findOne({ id: courseId });
-      // console.log("getCourse :" , getCourse.course_name)
-      // console.log(courseId)
+    // logic level cua nam hoc co van de
+    // try {
+    const { nameSchoolYear } = req.body;
+    const courseId = req.params.courseid;
+
+    const checkCourse = await Course.findOne({ id: courseId });
+    const getAllYear = await SchoolYear.find({ courseId: courseId });
+    const checkLevel = getAllYear.map((check) => check.level);
+    console.log("checkLevel :", checkLevel);
+    console.log("getAllYear :", getAllYear);
+    console.log("getAllYearlength :", getAllYear.length);
+
+    if (checkCourse) {
       const existingNameSchoolYear = await SchoolYear.findOne({
+        courseId: courseId,
         nameSchoolYear: nameSchoolYear,
       });
-      if (!existingNameSchoolYear && getCourse !== null) {
+
+      if (!existingNameSchoolYear) {
         const data = {
           nameSchoolYear: nameSchoolYear,
+
           courseId: courseId,
+          level: getAllYear.length + 1,
         };
         const createSchoolYear = await SchoolYear.create(data);
         console.log(createSchoolYear);
@@ -101,25 +189,170 @@ const TeacherController = {
           .status(200)
           .json({ success: true, msg: "Thêm năm học thành công !" });
       } else {
-        return res
-          .status(300)
-          .json({ success: false, msg: "năm học Đã Tồn Tại !!!" });
+        return res.status(300).json({
+          success: false,
+          msg: "Name year exits !",
+        });
       }
-    } catch (error) {
-      console.log("error :", error);
+    } else {
+      return res.status(300).json({
+        success: false,
+        msg: "course not exist !",
+      });
+    }
+
+    // if (checkCourse) {
+    //   const existingNameSchoolYear = await SchoolYear.findOne({
+    //     courseId: courseId,
+    //     nameSchoolYear: nameSchoolYear,
+    //   });
+
+    //   if (!existingNameSchoolYear) {
+    //     const checkLevel = await SchoolYear.findOne({
+    //       courseId: courseId,
+    //       level: level,
+    //     });
+    //     // console.log("getYear :", checkLevel);
+
+    //     if (!checkLevel) {
+    //       // check level ?
+    //       const data = {
+    //         nameSchoolYear: nameSchoolYear,
+
+    //         courseId: courseId,
+    //         level: level,
+    //       };
+    //       const createSchoolYear = await SchoolYear.create(data);
+    //       console.log(createSchoolYear);
+    //       return res
+    //         .status(200)
+    //         .json({ success: true, msg: "Thêm năm học thành công !" });
+    //     } else {
+    //       return res.status(300).json({
+    //         success: false,
+    //         msg: "level  error !",
+    //       });
+    //     }
+    //   } else {
+    //     return res.status(300).json({
+    //       success: false,
+    //       msg: "Name year exits !",
+    //     });
+    //   }
+    // } else {
+    //   return res.status(300).json({
+    //     success: false,
+    //     msg: "course not exist !",
+    //   });
+    // }
+  },
+
+  updateSchoolYears: async (req, res, next) => {
+    const { nameSchoolYear, id } = req.body;
+    const checkid = await SchoolYear.findOne(id);
+    console.log("checkid :", checkid);
+    const CourseId = checkid.courseId;
+
+    if (checkid) {
+      const checkNameYear = await SchoolYear.findOne({
+        courseId: CourseId,
+        nameSchoolYear: nameSchoolYear,
+      });
+      console.log("checkNameYear :", checkNameYear);
+      if (!checkNameYear) {
+        const updateSchoolYears = await SchoolYear.updateOne(
+          { id: id },
+          {
+            nameSchoolYear: nameSchoolYear,
+            level: level,
+          },
+          { new: true }
+        );
+        return res
+          .status(200)
+          .json({ success: true, msg: "update năm học thành công !" });
+      } else {
+        return res.status(300).json({ success: true, msg: "name exist  !" });
+      }
+    } else {
+      return res.status(300).json({ success: false, msg: "error roi ne !!!" });
     }
   },
 
+  deleteSchoolYear: async (req, res, next) => {
+    const { SchoolYearsID } = req.body;
+    const checkid = await SchoolYear.findOne({ _id: SchoolYearsID });
+    console.log("checkid :", checkid);
+    if (checkid) {
+      const deleteSchoolYear = await SchoolYear.findByIdAndDelete(
+        SchoolYearsID
+      );
+      const getLectureinYear = await Lecture.find({
+        SchoolYearsID: SchoolYearsID,
+      });
+      console.log("getLectureinYear :", getLectureinYear);
+      const getIdLecture = getLectureinYear.map((Lecture_ID) => Lecture_ID.id);
+      console.log("getIdLecture:", getIdLecture);
+      const deletelecture = await Lecture.deleteMany({
+        SchoolYearsID: SchoolYearsID,
+      });
+      const deleteTopic = await TopicLecure.deleteMany({
+        Lecture_ID: { $in: getIdLecture },
+      });
+      const getTopic = await TopicLecure.find({
+        Lecture_ID: { $in: getIdLecture },
+      });
+      const idTopic = getTopic.map((idTopic) => idTopic.id);
+      console.log("getTopic :", idTopic);
+      const getListTheory = await Theory.find({ Topic_id: { $in: idTopic } });
+      const deleteTheory = await Theory.deleteMany({
+        Topic_id: { $in: idTopic },
+      });
+
+      const getid_SchoolYear = await SchoolYear.find({
+        courseId: checkid.courseId,
+      });
+      const checkLevel = getid_SchoolYear.map((level) => level.level);
+      const updateLevel = await SchoolYear.updateMany(
+        { courseId: checkid.courseId, level: { $gt: checkid.level } },
+        { $inc: { level: -1 } }
+      );
+      console.log("getid_SchoolYear :", updateLevel);
+
+      return res
+        .status(200)
+        .json({ success: false, msg: "delete success !!!" });
+    } else {
+      return res.status(300).json({ success: false, msg: "id fault !!!" });
+    }
+  },
+
+  getListSchoolYear: async (req, res, next) => {
+    const { courseId } = req.body;
+    const getListSchoolYearinCourse = await SchoolYear.find({
+      courseId: courseId,
+    });
+    return res.status(200).json({
+      success: false,
+      msg: "list Schoolyear  success !!!",
+      list: getListSchoolYearinCourse,
+    });
+  },
+
+  // CRUD Lecture
+
   postCreateLecture: async (req, res, next) => {
     const { nameLecture } = req.body;
-    const courseId = req.params.CourseId;
-    const YearsId = req.params.YearsId;
+    const courseId = req.params.courseid;
+    const YearsId = req.params.yearsid;
     const checkCourse = await Course.findOne({ id: courseId });
     console.log("checkCourse :", checkCourse);
     const checkYear = await SchoolYear.findOne({ id: YearsId });
     console.log("checkYear :", checkYear);
     if (checkCourse && checkYear) {
       const nameLectureExist = await Lecture.findOne({
+        CourseID: courseId,
+        SchoolYearsID: YearsId,
         nameLecture: nameLecture,
       });
       console.log("nameLectureExist :", nameLectureExist);
@@ -133,7 +366,7 @@ const TeacherController = {
         console.log("creatLecture :", creatLecture);
         return res
           .status(200)
-          .json({ success: true, msg: "Thêm năm học thành công !" });
+          .json({ success: true, msg: "Thêm lecture học thành công !" });
       } else {
         return res
           .status(300)
@@ -144,10 +377,57 @@ const TeacherController = {
     }
   },
 
+  updateLecture: async (req, res) => {
+    const { id, nameLecture } = req.body;
+    const checkId = await Lecture.findOne({ id: id });
+    const getYear = checkId.SchoolYearsID;
+    if (checkId) {
+      const checkName = await Lecture.findOne({ SchoolYearsID: getYear });
+      if (!checkName) {
+        const updateLecture = await Lecture.findByIdAndUpdate(
+          { id },
+          { nameLecture: nameLecture }
+        );
+        return res
+          .status(200)
+          .json({ success: true, msg: "update lecture học thành công !" });
+      } else {
+        return res
+          .status(300)
+          .json({ success: false, msg: "name exist not found !!!" });
+      }
+    } else {
+      return res.status(300).json({ success: false, msg: "id not found !!!" });
+    }
+  },
+
+  deletelecture: async (req, res) => {
+    const { id } = req.body;
+    const deletelecture = await Lecture.findByIdAndDelete(id);
+    // const deleteTopic = await TopicLecure.deleteMany({
+    //   Lecture_ID: id
+    // })
+    const getTopic = await TopicLecure.find({ Lecture_ID: id });
+    const getIdTopic = getTopic.map((topId) => topId.id);
+    const deleteTheory = await theory.deleteMany({ _id: { $in: getIdTopic } });
+    //delete exam chua done
+  },
+
+  getLecture : async (req, res) => {
+    const {CourseID ,SchoolYearsID } = req.body
+    const findLecture = await Lecture.findOne({CourseID:CourseID , SchoolYearsID: SchoolYearsID})
+    return res
+    .status(200)
+    .json({ success: true, msg: "get lecture học thành công !" , "lecture" : findLecture  });
+  },
+
+  // CRUD TOPIC
+
   postCreateTopicLecture: async (req, res) => {
     try {
       const { TopicName, Lecture_ID } = req.body;
       const checkTopicExist = await TopicLecure.findOne({
+        Lecture_ID: Lecture_ID,
         TopicName: TopicName,
       });
       if (!checkTopicExist) {
@@ -168,25 +448,77 @@ const TeacherController = {
     }
   },
 
+  updateTopic :  async (req, res) => {
+    const {TopicName, topId} = req.body
+    const checkTopicExist = await TopicLecure.findOne({
+      TopicName:TopicName ,
+      id:topId
+    })  
+    if (!checkTopicExist) {
+      const updateTopic = await TopicLecure.updateOne(
+        {id:topId},
+        {TopicName:TopicName}
+      )
+      return res
+      .status(200)
+      .json({ success: true, msg: "update Topic thành công !" });
+    }else {
+      return res.status(300).json({ success: false, msg: " Topic name exist !" })
+    }
+  },
+
+  getTopic :  async (req, res) => {
+    const {Lecture_ID} = req.body
+    const checkLecture = await Lecture.findById(Lecture_ID)
+    if (checkLecture) {
+      const getTopic = await TopicLecure.findOne({Lecture_ID:Lecture_ID})
+      return res
+      .status(200)
+      .json({ success: true, msg: "update Topic thành công !" , "getTopic :": getTopic });
+    }else{
+      return res.status(300).json({ success: false, msg: " error Lecture_id not found !" })
+    }
+  },
+
+
+
+
+
+
+  // CRUD theory
+
   postCreateTheory: async (req, res, next) => {
     const { nameQuestion, answer, Topic_id } = req.body;
     const getTopicDetail = await TopicLecure.findOne({ id: Topic_id });
     const getTheoryExist = await theory.findOne({ Topic_id: Topic_id });
-    console.log(getTopicDetail);
-    if (Topic_id) {
-      if (getTheoryExist) {
-        getTheoryExist.Theory.push({
-          nameQuestion: nameQuestion,
-          answer: answer,
-        });
 
-        // Save the updated document
-        await getTheoryExist.save();
-        return res.status(200).json({
-          success: true,
-          msg: "Thêm theory thành công!",
-          createdTheory: getTheoryExist,
-        });
+    if (getTopicDetail) {
+      if (getTheoryExist) {
+        const getTheory = getTheoryExist.Theory;
+        const checkTheory = getTheory.filter(
+          (name) => name.nameQuestion === nameQuestion
+        );
+        console.log("checkTheory:", checkTheory);
+        if (checkTheory.length === 0) {
+          getTheoryExist.Theory.push({
+            nameQuestion: nameQuestion,
+            answer: answer,
+          });
+
+          // Save the updated document
+          await getTheoryExist.save();
+          return res.status(200).json({
+            success: true,
+            msg: "theem  theory thành công!",
+            createdTheory: getTheoryExist,
+          });
+        } else {
+          return res.status(200).json({
+            success: false,
+            msg: "  question name bi trung roi ne !",
+            // createdTheory: getTheoryExist,
+          });
+        }
       } else {
         const Theory = [
           {
@@ -230,9 +562,157 @@ const TeacherController = {
       .json({ success: true, msg: "get theory thành công !", getListTheory });
   },
 
+
+
+
+  //CRUD exam 
+
   PostCreateExam: async (req, res, next) => {
-    const { nameExam } = req.body;
+    const {
+      question_name,
+      topic_id,
+      correct_answer,
+      wrong_answer1,
+      wrong_answer2,
+      wrong_answer3,
+      wrong_answer4,
+    } = req.body;
+    const checkId = await TopicLecure.findOne({ id: topic_id });
+    if (checkId) {
+      const checkExcercise = await Exercise.findOne({ topic_id: topic_id });
+      if (checkExcercise) {
+        const getExcercise = checkExcercise.ex_question;
+        const checkQuestion = getExcercise.filter(
+          (question) => question.question_name === question_name
+        );
+        console.log("checkQuestion :" , checkQuestion)
+        console.log("getExcercise :" , getExcercise)
+
+        if (checkQuestion.length === 0) {
+          checkExcercise.ex_question.push({
+            question_name: question_name,
+            correct_answer: correct_answer,
+            wrong_answer1: wrong_answer1,
+            wrong_answer2: wrong_answer2,
+            wrong_answer3: wrong_answer3,
+            wrong_answer4: wrong_answer4,
+          });
+
+          await checkExcercise.save();
+          return res.status(200).json({
+            success: true,
+            msg: "theem  excercise thành công!",
+            createdTheory: checkExcercise,
+          });
+        } else
+          return res.status(200).json({
+            success: false,
+            msg: "  question name bi trung roi ne !",
+            // createdTheory: getTheoryExist,
+          });
+      } else {
+        const ex_question = [
+          {
+            question_name: question_name,
+            correct_answer: correct_answer,
+            wrong_answer1: wrong_answer1,
+            wrong_answer2: wrong_answer2,
+            wrong_answer3: wrong_answer3,
+            wrong_answer4: wrong_answer4,
+          },
+        ];
+        console.log(Theory);
+
+        const createdTheory = await Exercise.create({
+          ex_question: [
+            {
+              question_name: question_name,
+              correct_answer: correct_answer,
+              wrong_answer1: wrong_answer1,
+              wrong_answer2: wrong_answer2,
+              wrong_answer3: wrong_answer3,
+              wrong_answer4: wrong_answer4,
+            },
+          ],
+          topic_id: topic_id,
+        });
+        console.log(createdTheory);
+        return res.status(200).json({
+          success: true,
+          msg: "tạo exam thành công !",
+          createdTheory,
+        });
+      }
+    }
   },
+
+
+
+
+  //  create mark-topic 
+  PostMark_topic :  async (req, res, next) => {
+    const {mark , examId } = req.body
+    
+     const token = req.headers.authorization?.split(" ")[1];
+    const token_decode = jwt_decode(token);
+      
+    const checkExam = await Exercise.findOne({_id : examId})
+    const getTopicId = checkExam.topic_id
+    const getTopic = await TopicLecure.findById(getTopicId)
+    if (checkExam && getTopic) {
+      const createMark_topic = await MarkModelST.create({
+        mark:mark ,
+        exam_id:getTopicId,
+
+      })
+    }
+  },
+  
+
+
+
+
+
+  // create mark-Lecture 
+
+
+
+  // create mark-School Year 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // postChangePassword: async (req, res, next) => {
 
