@@ -6,7 +6,7 @@ const teacherRole = require('../middleware/TeacherRole');
 
 
 // CRUD Course
-router.post('/create-course',teacherRole  , TeacherController.postCreateCourse)  //teacherRole
+router.post('/create-course'  , TeacherController.postCreateCourse)  //teacherRole
 router.patch('/update-Course' , TeacherController.UpdateCourse)
 router.delete('/delete-course' , TeacherController.deleteCourse)
 router.delete('/delete-allcourse', TeacherController.deleteAllCoursse )
@@ -26,18 +26,24 @@ router.post('/create-lecture/:courseid/:yearsid'  , TeacherController.postCreate
 router.post('')
 
 
+
 //CRUD topic 
 router.post('/create-topic', TeacherController.postCreateTopicLecture) 
 
 // CRUD theory
 router.post('/create-theory' , TeacherController.postCreateTheory) 
 router.get('/get-listTheory' , TeacherController.getAllTheory)
-
+router.get ('/get-theory ' )
 //CRUD exam 
 router.post('/create-exam'  , TeacherController.PostCreateExam) 
 
-
+router.post('/get-listExam' , )
 router.get("/get-theory" ,TeacherController.getAllTheory )
+
+// post mark exam_topic 
+router.post('/createMark-topic' , TeacherController.PostMark_topic)
+
+router.post('/createMark-lecture' , TeacherController.PostMark_lecture)
 
 
 

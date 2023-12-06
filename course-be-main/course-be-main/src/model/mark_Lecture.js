@@ -46,13 +46,14 @@ const MarkModel = new Schema({
         required: true,
     },
     
-    exam_id: {
+
+    Lecture_ID: {
         type: String,
         required: true,
     },
     
     mark: {
-        type: String,
+        type: Number,
         required: true
     },
     
@@ -60,4 +61,4 @@ const MarkModel = new Schema({
 }, {
     timestamps: true
 });
-module.exports = mongoose.model("mark_Topic", MarkModel);
+module.exports = mongoose.model("mark_Lecture", MarkModel);
