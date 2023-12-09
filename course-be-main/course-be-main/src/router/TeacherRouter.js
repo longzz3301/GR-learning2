@@ -46,6 +46,9 @@ router.post('/createMark-topic' , TeacherController.PostMark_topic)
 router.post('/createMark-lecture' , TeacherController.PostMark_lecture)
 
 
+router.post('/createMark-year' , TeacherController.PostMark_year)
+
+
 
 // router.post('/create-course', upload_course.single('image'), TeacherController.postCreateCourse);
 // router.post('/edit-course', teacherRole, TeacherController.postEditCourse);

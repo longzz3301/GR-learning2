@@ -5,7 +5,7 @@ const Lecture = require("../model/Lecture");
 const Exercise = require("../model/Exercise");
 // const History = require('../model/HistoryCourse');
 // const SchoolYearModel = require("../model/SchoolYear")
-const MarkModelST = require("../model/mark_Lecture.js");
+// const MarkModelST = require("../model/mark_Lecture.js");
 const jwt = require("jsonwebtoken");
 const jwt_decode = require("jwt-decode");
 const fs = require("fs-extra");
@@ -17,6 +17,7 @@ const SchoolYear = require("../model/SchoolYear");
 const mark = require("../model/mark_Lecture.js");
 const mark_Lecture = require("../model/mark_Lecture.js");
 const Mark_Topic = require("../model/Mark_Topic.js");
+const Mark_Year = require("../model/Mark_Year.js");
 
 const TeacherController = {
   // CRUD Course
@@ -661,6 +662,11 @@ const TeacherController = {
 
   // },
 
+  
+
+
+  // đây là roll student viết tạm 
+
   //  create mark-topic
   PostMark_topic: async (req, res, next) => {
     const { mark, exam_id, student_id } = req.body;
@@ -724,41 +730,105 @@ const TeacherController = {
 
   PostMark_lecture: async (req, res, next) => {
     const { studentId, Lecture_ID } = req.body;
-    const listTopic = await TopicLecure.find({ Lecture_ID: Lecture_ID });
+    const checkLecture = await mark_Lecture.findOne({Lecture_ID:Lecture_ID , student_id:studentId})
+
+
     
-    const listTopicId = listTopic.map((list) => list.id);
-    console.log("listTopicId" , listTopicId)
-    const listMark = await Mark_Topic.find({
-      topic_id: { $in: listTopicId },
-      student_id: studentId,
-    });
-    console.log("listMark", listMark);
-    const getMark = listMark.map((mark) => mark.mark);
-    console.log("getMark", getMark);
-    const intialValue = 0
-    const totalMark = getMark.reduce((caculateTotal , intialValue)  =>  (caculateTotal + intialValue)/getMark.length )
-    console.log("totalMark", totalMark);
-    const calMarkLecture = await mark_Lecture.create({
-      Lecture_ID : Lecture_ID ,
-      student_id: studentId,
-      mark: totalMark
-    });
-
-    return res
-      .status(200)
-      .json({
-        success: true,
-        msg: "update diem học thành công !",
-        "totalMark-lecture": calMarkLecture,
-
+    if (checkLecture === null) {
+      const listTopic = await TopicLecure.find({ Lecture_ID: Lecture_ID });
+      const listTopicId = listTopic.map((list) => list.id);
+      console.log("listTopicId" , listTopicId)
+      const listMark = await Mark_Topic.find({
+        topic_id: { $in: listTopicId },
+        student_id: studentId,
       });
-  },
 
+      console.log("listMark", listMark);
+      const getMark = listMark.map((mark) => mark.mark);
+      console.log("getMark", getMark);
+      const intialValue = 0;
+      const totalMark = getMark.length > 0
+        ? getMark.reduce((calculateTotal, currentValue) => (calculateTotal + currentValue), 0) / getMark.length
+        : 0;
+      
+      const calMarkLecture = await mark_Lecture.create({
+        Lecture_ID : Lecture_ID ,
+        student_id: studentId,
+        mark: totalMark
+      });
+  
+      return res
+        .status(200)
+        .json({
+          success: true,
+          msg: "create diem học thành công !",
+          "totalMark-lecture": calMarkLecture,
+  
+        });
+    } else {
+      const listTopic = await TopicLecure.find({ Lecture_ID: Lecture_ID });
+      const listTopicId = listTopic.map((list) => list.id);
+      console.log("listTopicId" , listTopicId)
+      const listMark = await Mark_Topic.find({
+        topic_id: { $in: listTopicId },
+        student_id: studentId,
+      });
+
+      console.log("listMark", listMark);
+      const getMark = listMark.map((mark) => mark.mark);
+      console.log("getMark", getMark);
+      const intialValue = 0
+      const UpdateTotalMark = getMark.reduce((caculateTotal , intialValue)  =>  (caculateTotal + intialValue)/getMark.length )
+      console.log("totalMark", UpdateTotalMark);
+      const calMarkLecture = await mark_Lecture.updateOne({
+        Lecture_ID : Lecture_ID ,
+        student_id: studentId,
+        mark: UpdateTotalMark
+      });
+  
+      return res
+        .status(200)
+        .json({
+          success: true,
+          msg: "update diem học cua lecture thành công !",
+          "totalMark-lecture": calMarkLecture,
+  
+        });
+
+    }
+  },
 
   PostMark_year :async (req, res, next) => {
     const { studentId, CourseID , SchoolYearsID } = req.body;
+    const findLecture = await Lecture.find({
+      CourseID:CourseID , 
+      SchoolYearsID: SchoolYearsID
+    })
+    const getIdLecture = findLecture.map((lecture) => lecture.id )
+    const getMarkLecture = await mark_Lecture.find({
+      student_id: studentId ,
+      Lecture_ID: { $in :getIdLecture}
+    })
+    const MarkLecture = getMarkLecture.map((mark) => mark.mark)
+    const intialValue = 0
+    const UpdateTotalMarkYear = MarkLecture.reduce((caculateTotal , intialValue)  =>  (caculateTotal + intialValue)/MarkLecture.length )
+    console.log("totalMark", UpdateTotalMarkYear);
+    const calMarkYear = await Mark_Year.create({
+      courseId : CourseID ,
+      SchoolYearsID: SchoolYearsID,
+      student_id: studentId ,
+      mark: UpdateTotalMarkYear
+    });
 
-    
+
+    return res
+    .status(200)
+    .json({
+      success: true,
+      msg: "create diem học cua lecture thành công !",
+      "totalMark-year": UpdateTotalMarkYear,
+
+    });
 
   }
 
