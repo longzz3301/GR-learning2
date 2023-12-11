@@ -664,73 +664,140 @@ const TeacherController = {
 
   //  create mark-topic
   PostMark_topic: async (req, res, next) => {
-    try {const { mark, exam_id, student_id } = req.body;
-    const {CourseID ,SchoolYearsID, Lecture_ID } = req.params
+    try {
+      const { mark, exam_id, student_id } = req.body;
+      const CourseID = req.params.course_id;
+      const SchoolYearsID = req.params.schoolyear_id;
+      const topic_id = req.params.topic_id;
+      const lecture_id = req.params.lecture_id;
+      const token = req.headers.authorization?.split(" ")[1];
+      // const token_decode = jwt_decode(token);
+      // const student = token_decode.email
+      // const getstudentId = await Account.findOne({email:student})
+      // const studentId = getstudentId.id // student id qua token
+      const check_id_stu = await Account.findById(student_id);
+      const checkExam = await Exercise.findOne({ id: exam_id });
+      console.log("checkExam :", checkExam);
 
-    const token = req.headers.authorization?.split(" ")[1];
-    // const token_decode = jwt_decode(token);
-    // const student = token_decode.email
-    // const getstudentId = await Account.findOne({email:student})
-    // const studentId = getstudentId.id // student id qua token
-    const checkIDstu = await Account.findById(student_id);
-    const checkExam = await Exercise.findOne({ id: exam_id });
-    console.log("checkExam :", checkExam);
-    const getTopicId = checkExam.topic_id;
-    console.log("getTopicId :", getTopicId);
-    // const getTopic = await TopicLecure.findById(getTopicId)
-    const checkTopicId = await TopicLecure.findOne({ id: getTopicId });
-    console.log("getTopicId :", getTopicId);
-    // console.log("getTopic" , getTopic)
-    const checkMarkTopicExits = await Mark_Topic.findOne({
-      student_id: student_id,
-      exam_id: exam_id,
-    });
-    console.log("student_id", student_id);
-    console.log("examId", exam_id);
-    console.log("checkMarkTopicExits :", checkMarkTopicExits);
+      // const checkTopicId = await TopicLecure.findOne({ id: getTopicId });
+      // console.log("getTopicId :", getTopicId);
 
-    if (checkExam && checkIDstu) {
-      if (checkMarkTopicExits === null) {
-        console.log("vao 1");
-        const createMark_topic = await Mark_Topic.create({
-          mark: mark,
-          exam_id: exam_id,
-          student_id: student_id,
-          topic_id: getTopicId,
-        });
-        return res.status(200).json({
-          success: true,
-          msg: "luu markTopic thành công !",
-          createMark_topic: createMark_topic,
-        });
-      } else {
-        // update diem cua topic
-        console.log("vao 2");
-        console.log("checkMarkTopicExits.id ", checkMarkTopicExits.id);
-        const updateMark_topic = await Mark_Topic.updateOne(
-          { id: checkMarkTopicExits.id },
-          { mark: mark },
-          { new: true }
-        );
-        return res.status(200).json({
-          success: true,
-          msg: "update diem học thành công !",
-          updateMark_topic: updateMark_topic,
+      const checkMarkTopicExits = await Mark_Topic.findOne({
+        student_id: student_id,
+        exam_id: exam_id,
+      });
+      console.log("student_id", student_id);
+      console.log("examId", exam_id);
+      console.log("checkMarkTopicExits :", checkMarkTopicExits);
+
+      if (checkExam === null && check_id_stu === null) {
+        return res.status(300).json({
+          success: false,
+          msg: "loi roi ne !",
         });
       }
+      if (checkMarkTopicExits) {
+        const filterUpdateMarkTopic = { _id: checkMarkTopicExits.id };
+        const updateMarkTopic = { mark: mark };
+        const optionsUpdateMarkTopic = { upsert: true };
+
+        const updatemark_topic = await Mark_Topic.updateOne(
+            filterUpdateMarkTopic,
+            updateMarkTopic,
+            optionsUpdateMarkTopic
+        );
+        
     } else {
-      return res.status(300).json({
-        success: false,
-        msg: "loi roi ne !",
-      });
+        // Tạo mới mark cho topic nếu chưa tồn tại
+        const createMark_topic = await Mark_Topic.create({
+            mark: mark,
+            exam_id: exam_id,
+            student_id: student_id,
+            topic_id: topic_id,
+        });
+       
     }
-      
+      // caculate mark lecture
+
+      const get_lecture_ids = lecture_id;
+      const get_list_topic = await TopicLecure.find({
+        Lecture_ID: get_lecture_ids,
+      });
+      console.log("123");
+
+      const list_topic_id = get_list_topic.map((list) => list.id);
+      const list_mark = await Mark_Topic.find({
+        topic_id: { $in: list_topic_id },
+        student_id: student_id,
+      });
+      const get_mark = list_mark.map((list) => list.mark);
+      const intialValue = 0;
+      const total_mark_lecture =
+        get_mark.length > 0
+          ? get_mark.reduce(
+              (calculateTotal, currentValue) => calculateTotal + currentValue,
+              0
+            ) / get_mark.length
+          : 0;
+
+      const check_mark_lecture = await mark_Lecture.findOne({
+        student_id: student_id,
+        Lecture_ID: lecture_id,
+      });
+
+      const filter = { student_id: student_id, Lecture_ID: lecture_id };
+      const update = { mark: total_mark_lecture };
+      const options = { upsert: true }; // Nếu không tìm thấy, tạo mới
+      const result = await mark_Lecture.updateOne(filter, update, options);
+      console.log("caculate mark lecture ", total_mark_lecture);
+
+      // caculate mark year
+      const find_lecture = await Lecture.find({
+        CourseID: CourseID,
+        SchoolYearsID: SchoolYearsID,
+      });
+
+      const leccture_id = find_lecture.map((lecture) => lecture.id);
+      const find_mark_lec = await mark_Lecture.find({
+        student_id: student_id,
+        Lecture_ID: { $in: leccture_id },
+      });
+      const MarkLecture = find_mark_lec.map((mark) => mark.mark);
+      const intialValue2 = 0;
+      const UpdateTotalMarkYear = MarkLecture.reduce(
+        (caculateTotal, intialValue) =>
+          (caculateTotal + intialValue) / MarkLecture.length
+      );
+      console.log("totalMark", UpdateTotalMarkYear);
+      const filterMarkYear = {
+        courseId: CourseID,
+        SchoolYearsID: SchoolYearsID,
+        student_id: student_id,
+      };
+
+      const updateMarkYear = {
+        mark: UpdateTotalMarkYear,
+      };
+
+      const optionsMarkYear = { upsert: true };
+
+      const resultMarkYear = await Mark_Year.updateOne(
+        filterMarkYear,
+        updateMarkYear,
+        optionsMarkYear
+      );
+        
+      console.log("caculate mark year", resultMarkYear);
+
+      return res.status(200).json({
+        success: true,
+        msg: "creat diem học thành công !",
+      });
     } catch (error) {
       return res.status(300).json({
         success: false,
         msg: error.message,
       });
-      
     }
   },
 
@@ -760,7 +827,6 @@ const TeacherController = {
               0
             ) / getMark.length
           : 0;
-          
 
       const calMarkLecture = await mark_Lecture.create({
         Lecture_ID: Lecture_ID,
@@ -787,12 +853,12 @@ const TeacherController = {
       console.log("getMark", getMark);
       const intialValue = 0;
       const UpdateTotalMark =
-      getMark.length > 0
-        ? getMark.reduce(
-            (calculateTotal, currentValue) => calculateTotal + currentValue,
-            0
-          ) / getMark.length
-        : 0;
+        getMark.length > 0
+          ? getMark.reduce(
+              (calculateTotal, currentValue) => calculateTotal + currentValue,
+              0
+            ) / getMark.length
+          : 0;
       console.log("totalMark", UpdateTotalMark);
       const calMarkLecture = await mark_Lecture.updateOne({
         Lecture_ID: Lecture_ID,
@@ -840,7 +906,6 @@ const TeacherController = {
     });
   },
 
-
   test_import_file: async (req, res, next) => {
     try {
       const { topic_id } = req.params;
@@ -882,9 +947,9 @@ const TeacherController = {
         return res.send({ status: 200, success: true, msg: "Run okay" });
       }
       const updateExam = await Exercise.findOneAndUpdate(
-        {topic_id:topic_id} ,
-        {$set : {ex_question:ex_questions}}
-      )
+        { topic_id: topic_id },
+        { $set: { ex_question: ex_questions } }
+      );
       return res.send({ status: 200, success: true, msg: "update okay" });
     } catch (error) {
       res.send({ status: 400, success: false, msg: error.message });

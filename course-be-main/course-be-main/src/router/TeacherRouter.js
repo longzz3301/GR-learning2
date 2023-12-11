@@ -44,15 +44,17 @@ router.post('/create-exam'  , TeacherController.PostCreateExam)
 router.post('/get-listExam' , )
 router.get("/get-theory" ,TeacherController.getAllTheory )
 
+
+
 // post mark exam_topic 
-router.post('/createMark-topic' , TeacherController.PostMark_topic)
+router.post('/createMark-topic/:course_id/:schoolyear_id/:lecture_id/:topic_id' , TeacherController.PostMark_topic)
 
 router.post('/createMark-lecture' , TeacherController.PostMark_lecture)
 
 
 router.post('/createMark-year' , TeacherController.PostMark_year)
 
-router.post('/createMark/:course_id/:schoolyear_id/:lecture_id' , TeacherController.PostMark_topic)
+router.post('/createMark/:course_id/:schoolyear_id/:lecture_id/:topic_id' , TeacherController.PostMark_topic)
 
 
 
