@@ -32,6 +32,9 @@ app.use(cookieParser('ddn'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
+
+
+
 // DATABASE
 const database = require('./config/database');
 const Account = require('./controller/AccountController');
@@ -52,6 +55,8 @@ app.use('/api/account', AccountRouter);
 // app.use('/api/student', StudentRouter);
 app.use('/api/teacher', TeacherRouter);
 // app.use('/api/admin', AdminRouter);
+
+
 
 app.listen(port, () => {
     console.log(`server is running in port ${port}`)

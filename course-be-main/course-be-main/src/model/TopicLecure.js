@@ -9,7 +9,7 @@ const TopicModel = new Schema({
 
     Lecture_ID : {
         type: String,
-        // required: true,
+        required: true,
     }
 
    
@@ -17,3 +17,4 @@ const TopicModel = new Schema({
     timestamps: true
 })
 module.exports = mongoose.model('Topic', TopicModel)
+

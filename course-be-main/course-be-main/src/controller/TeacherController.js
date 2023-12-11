@@ -1,5 +1,12 @@
 const Account = require("../model/Account");
+const XLSX = require("xlsx");
+
 const Course = require("../model/Course");
+const csv = require("csv-parser");
+const path = require("path");
+const filePath = path.join(__dirname, "relative/path/to/your/file.csv");
+const { Readable } = require("stream");
+const ccsv = require("csvtojson");
 // const Subject = require('../model/Subject');
 const Lecture = require("../model/Lecture");
 const Exercise = require("../model/Exercise");
@@ -423,18 +430,16 @@ const TeacherController = {
       CourseID: CourseID,
       SchoolYearsID: SchoolYearsID,
     });
-    return res
-      .status(200)
-      .json({
-        success: true,
-        msg: "get lecture học thành công !",
-        lecture: findLecture,
-      });
+    return res.status(200).json({
+      success: true,
+      msg: "get lecture học thành công !",
+      lecture: findLecture,
+    });
   },
 
   // CRUD TOPIC
 
-  postCreateTopicLecture: async (req, res) => {
+  CreateTopicLecture: async (req, res) => {
     try {
       const { TopicName, Lecture_ID } = req.body;
       const checkTopicExist = await TopicLecure.findOne({
@@ -485,13 +490,11 @@ const TeacherController = {
     const checkLecture = await Lecture.findById(Lecture_ID);
     if (checkLecture) {
       const getTopic = await TopicLecure.findOne({ Lecture_ID: Lecture_ID });
-      return res
-        .status(200)
-        .json({
-          success: true,
-          msg: "update Topic thành công !",
-          "getTopic :": getTopic,
-        });
+      return res.status(200).json({
+        success: true,
+        msg: "update Topic thành công !",
+        "getTopic :": getTopic,
+      });
     } else {
       return res
         .status(300)
@@ -657,19 +660,12 @@ const TeacherController = {
     }
   },
 
-  //  getAllExam_topic  :  async (req, res, next) => {
-  //   const  get
-
-  // },
-
-  
-
-
-  // đây là roll student viết tạm 
+  // đây là roll student viết tạm
 
   //  create mark-topic
   PostMark_topic: async (req, res, next) => {
-    const { mark, exam_id, student_id } = req.body;
+    try {const { mark, exam_id, student_id } = req.body;
+    const {CourseID ,SchoolYearsID, Lecture_ID } = req.params
 
     const token = req.headers.authorization?.split(" ")[1];
     // const token_decode = jwt_decode(token);
@@ -682,8 +678,8 @@ const TeacherController = {
     const getTopicId = checkExam.topic_id;
     console.log("getTopicId :", getTopicId);
     // const getTopic = await TopicLecure.findById(getTopicId)
-    const checkTopicId = await TopicLecure.findOne({id: getTopicId})
-      console.log("getTopicId :", getTopicId);
+    const checkTopicId = await TopicLecure.findOne({ id: getTopicId });
+    console.log("getTopicId :", getTopicId);
     // console.log("getTopic" , getTopic)
     const checkMarkTopicExits = await Mark_Topic.findOne({
       student_id: student_id,
@@ -710,15 +706,17 @@ const TeacherController = {
       } else {
         // update diem cua topic
         console.log("vao 2");
-        console.log("checkMarkTopicExits.id " ,checkMarkTopicExits.id );
+        console.log("checkMarkTopicExits.id ", checkMarkTopicExits.id);
         const updateMark_topic = await Mark_Topic.updateOne(
           { id: checkMarkTopicExits.id },
           { mark: mark },
           { new: true }
         );
-        return res
-          .status(200)
-          .json({ success: true, msg: "update diem học thành công !" ,"updateMark_topic" : updateMark_topic  });
+        return res.status(200).json({
+          success: true,
+          msg: "update diem học thành công !",
+          updateMark_topic: updateMark_topic,
+        });
       }
     } else {
       return res.status(300).json({
@@ -726,18 +724,26 @@ const TeacherController = {
         msg: "loi roi ne !",
       });
     }
+      
+    } catch (error) {
+      return res.status(300).json({
+        success: false,
+        msg: error.message,
+      });
+      
+    }
   },
 
   PostMark_lecture: async (req, res, next) => {
     const { studentId, Lecture_ID } = req.body;
-    const checkLecture = await mark_Lecture.findOne({Lecture_ID:Lecture_ID , student_id:studentId})
-
-
-    
+    const checkLecture = await mark_Lecture.findOne({
+      Lecture_ID: Lecture_ID,
+      student_id: studentId,
+    });
     if (checkLecture === null) {
       const listTopic = await TopicLecure.find({ Lecture_ID: Lecture_ID });
       const listTopicId = listTopic.map((list) => list.id);
-      console.log("listTopicId" , listTopicId)
+      console.log("listTopicId", listTopicId);
       const listMark = await Mark_Topic.find({
         topic_id: { $in: listTopicId },
         student_id: studentId,
@@ -747,28 +753,30 @@ const TeacherController = {
       const getMark = listMark.map((mark) => mark.mark);
       console.log("getMark", getMark);
       const intialValue = 0;
-      const totalMark = getMark.length > 0
-        ? getMark.reduce((calculateTotal, currentValue) => (calculateTotal + currentValue), 0) / getMark.length
-        : 0;
-      
+      const totalMark =
+        getMark.length > 0
+          ? getMark.reduce(
+              (calculateTotal, currentValue) => calculateTotal + currentValue,
+              0
+            ) / getMark.length
+          : 0;
+          
+
       const calMarkLecture = await mark_Lecture.create({
-        Lecture_ID : Lecture_ID ,
+        Lecture_ID: Lecture_ID,
         student_id: studentId,
-        mark: totalMark
+        mark: totalMark,
       });
-  
-      return res
-        .status(200)
-        .json({
-          success: true,
-          msg: "create diem học thành công !",
-          "totalMark-lecture": calMarkLecture,
-  
-        });
+
+      return res.status(200).json({
+        success: true,
+        msg: "create diem học thành công !",
+        "totalMark-lecture": calMarkLecture,
+      });
     } else {
       const listTopic = await TopicLecure.find({ Lecture_ID: Lecture_ID });
       const listTopicId = listTopic.map((list) => list.id);
-      console.log("listTopicId" , listTopicId)
+      console.log("listTopicId", listTopicId);
       const listMark = await Mark_Topic.find({
         topic_id: { $in: listTopicId },
         student_id: studentId,
@@ -777,60 +785,111 @@ const TeacherController = {
       console.log("listMark", listMark);
       const getMark = listMark.map((mark) => mark.mark);
       console.log("getMark", getMark);
-      const intialValue = 0
-      const UpdateTotalMark = getMark.reduce((caculateTotal , intialValue)  =>  (caculateTotal + intialValue)/getMark.length )
+      const intialValue = 0;
+      const UpdateTotalMark =
+      getMark.length > 0
+        ? getMark.reduce(
+            (calculateTotal, currentValue) => calculateTotal + currentValue,
+            0
+          ) / getMark.length
+        : 0;
       console.log("totalMark", UpdateTotalMark);
       const calMarkLecture = await mark_Lecture.updateOne({
-        Lecture_ID : Lecture_ID ,
+        Lecture_ID: Lecture_ID,
         student_id: studentId,
-        mark: UpdateTotalMark
+        mark: UpdateTotalMark,
       });
-  
-      return res
-        .status(200)
-        .json({
-          success: true,
-          msg: "update diem học cua lecture thành công !",
-          "totalMark-lecture": calMarkLecture,
-  
-        });
 
+      return res.status(200).json({
+        success: true,
+        msg: "update diem học cua lecture thành công !",
+        "totalMark-lecture": calMarkLecture,
+      });
     }
   },
 
-  PostMark_year :async (req, res, next) => {
-    const { studentId, CourseID , SchoolYearsID } = req.body;
+  PostMark_year: async (req, res, next) => {
+    const { studentId, CourseID, SchoolYearsID } = req.body;
     const findLecture = await Lecture.find({
-      CourseID:CourseID , 
-      SchoolYearsID: SchoolYearsID
-    })
-    const getIdLecture = findLecture.map((lecture) => lecture.id )
+      CourseID: CourseID,
+      SchoolYearsID: SchoolYearsID,
+    });
+    const getIdLecture = findLecture.map((lecture) => lecture.id);
     const getMarkLecture = await mark_Lecture.find({
-      student_id: studentId ,
-      Lecture_ID: { $in :getIdLecture}
-    })
-    const MarkLecture = getMarkLecture.map((mark) => mark.mark)
-    const intialValue = 0
-    const UpdateTotalMarkYear = MarkLecture.reduce((caculateTotal , intialValue)  =>  (caculateTotal + intialValue)/MarkLecture.length )
+      student_id: studentId,
+      Lecture_ID: { $in: getIdLecture },
+    });
+    const MarkLecture = getMarkLecture.map((mark) => mark.mark);
+    const intialValue = 0;
+    const UpdateTotalMarkYear = MarkLecture.reduce(
+      (caculateTotal, intialValue) =>
+        (caculateTotal + intialValue) / MarkLecture.length
+    );
     console.log("totalMark", UpdateTotalMarkYear);
     const calMarkYear = await Mark_Year.create({
-      courseId : CourseID ,
+      courseId: CourseID,
       SchoolYearsID: SchoolYearsID,
-      student_id: studentId ,
-      mark: UpdateTotalMarkYear
+      student_id: studentId,
+      mark: UpdateTotalMarkYear,
     });
 
-
-    return res
-    .status(200)
-    .json({
+    return res.status(200).json({
       success: true,
       msg: "create diem học cua lecture thành công !",
       "totalMark-year": UpdateTotalMarkYear,
-
     });
+  },
 
-  }
+
+  test_import_file: async (req, res, next) => {
+    try {
+      const { topic_id } = req.params;
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      // Chọn trang tính đầu tiên từ workbook (nếu có nhiều trang tính)
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      // Chuyển đổi dữ liệu từ trang tính thành mảng JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      // In ra mảng JSON
+      // console.log(jsonData);
+      const checkTopicId = await TopicLecure.findOne({ id: topic_id });
+      const ex_questions = [];
+      for (const item of jsonData) {
+        const question = {
+          questionName: item["Question Name"],
+          wrongAnswer1: item.wrong_answer1,
+          wrongAnswer2: item.wrong_answer2,
+          wrongAnswer3: item.wrong_answer3,
+          wrongAnswer4: item.wrong_answer4,
+          correctAnswer: item.correct_answer,
+        };
+        ex_questions.push(question);
+      }
+      if (topic_id === null) {
+        return res.status(300).json({
+          success: false,
+          msg: "  topic k ton tai !",
+        });
+      }
+      const checkExam = await Exercise.findOne({ topic_id: topic_id });
+      if (checkExam === null) {
+        const exercise = await Exercise.create({
+          topic_id: topic_id,
+          ex_question: ex_questions,
+        });
+        // await exercise.save();
+        console.log("Dữ liệu thêm thành công.");
+        return res.send({ status: 200, success: true, msg: "Run okay" });
+      }
+      const updateExam = await Exercise.findOneAndUpdate(
+        {topic_id:topic_id} ,
+        {$set : {ex_question:ex_questions}}
+      )
+      return res.send({ status: 200, success: true, msg: "update okay" });
+    } catch (error) {
+      res.send({ status: 400, success: false, msg: error.message });
+    }
+  },
 
   // create mark-Lecture
 

@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 const TeacherController = require('../controller/TeacherController');
 const teacherRole = require('../middleware/TeacherRole');
+// const upload = require('../middleware/multerExcel');
 // const upload_course = require('../middleware/multerCourse');
-
+const multer = require('multer');
+const fs = require('fs-extra');
+const storage = multer.memoryStorage(); // Lưu trữ file trong bộ nhớ
+const upload = multer({ storage: storage });
 
 // CRUD Course
 router.post('/create-course'  , TeacherController.postCreateCourse)  //teacherRole
@@ -28,7 +32,7 @@ router.post('')
 
 
 //CRUD topic 
-router.post('/create-topic', TeacherController.postCreateTopicLecture) 
+router.post('/create-topic', TeacherController.CreateTopicLecture) 
 
 // CRUD theory
 router.post('/create-theory' , TeacherController.postCreateTheory) 
@@ -48,7 +52,14 @@ router.post('/createMark-lecture' , TeacherController.PostMark_lecture)
 
 router.post('/createMark-year' , TeacherController.PostMark_year)
 
+router.post('/createMark/:course_id/:schoolyear_id/:lecture_id' , TeacherController.PostMark_topic)
 
+
+
+
+// test create file excel 
+
+router.post('/create_file_excel/:topic_id' , upload.single("csvFile") , TeacherController.test_import_file)
 
 // router.post('/create-course', upload_course.single('image'), TeacherController.postCreateCourse);
 // router.post('/edit-course', teacherRole, TeacherController.postEditCourse);
