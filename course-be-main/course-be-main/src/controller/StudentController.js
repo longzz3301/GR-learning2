@@ -11,6 +11,8 @@ const jwt_decode = require("jwt-decode");
 const fs = require("fs-extra");
 const SchoolYear = require("../model/SchoolYear");
 const Mark_Year = require("../model/Mark_Year");
+const TopicLecure = require("../model/TopicLecure");
+const theory = require("../model/theory");
 const StudentController = {
   PostMark_topic: async (req, res, next) => {
     try {
@@ -228,6 +230,63 @@ const StudentController = {
       list_lecutre: get_lecutre,
     });
   },
+
+  get_topic :  async (req, res, next) => {
+    const Lecture_id = req.body
+    const checkLecture = await Lecture.findById(Lecture_id)
+
+    if (!checkLecture) {
+      return res.status(300).json({
+        success: false,
+        msg: "not found lecture",
+      });
+
+    }
+
+    const list_topic = await TopicLecure.findOne({
+      Lecture_ID:Lecture_id
+    })
+
+    return res.status(200).json({
+      success: true,
+      msg: "get list topic success !",
+      list_topic: list_topic
+    });
+  },
+
+  get_exam_theory : async (req, res, next) => {
+    // const token_decode = jwt_decode(token);
+    // const student = token_decode.email
+    // const getstudentId = await Account.findOne({email:student})
+    // const studentId = getstudentId.id // student id qua token
+    try {
+      const {topic_id} = req.body
+      const check_topic = await TopicLecure.findById(topic_id)
+  
+      if (!topic_id) {
+        return res.status(300).json({
+          success: false,
+          msg: "not found topic",
+        });
+      }
+  
+      const get_theory = await theory.findOne({Topic_id:topic_id})
+      const get_exam = await Exercise.findOne({topic_id:topic_id})
+      return res.status(200).json({
+        success: true,
+        msg: "get list topic success !",
+        list_theory : get_theory,
+        list_exam : get_exam
+      });
+      
+    } catch (error) {
+      return res.status(300).json({
+        success: false,
+        msg: error.message,
+      });
+    }
+
+  }
 
   // getAllCourse: async (req, res, next) => {
   //     await Course.find({ course_status: true }).sort({ createdAt: -1 }).limit(3).lean().then(async courses => {

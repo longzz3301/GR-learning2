@@ -18,6 +18,9 @@ router.get('/get_list_yearStu' , StudentController.get_list_yearStu)
 // get list lecture for stu 
 router.post('/get_lecture' , StudentController.get_lecture)
 
+// get exam -theory 
+router.get('/get_exam_theory' , StudentController.get_exam_theory)
+
 // caculate mark after submit exam 
 router.post('/createMark-topic/:course_id/:schoolyear_id/:lecture_id/:topic_id' , StudentController.PostMark_topic)
 

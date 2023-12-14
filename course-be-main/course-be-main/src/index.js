@@ -45,14 +45,14 @@ const TeacherController = require('./controller/TeacherController');
 // const AdminController = require('./controller/AdminController');
 // ROUTER
 const AccountRouter = require('./router/AccountRouter');
-// const StudentRouter = require('./router/StudentRouter');
+const StudentRouter = require('./router/StudentRouter');
 const TeacherRouter = require('./router/TeacherRouter');
 // const AdminRouter = require('./router/AdminRouter');
 
 
 
 app.use('/api/account', AccountRouter);
-// app.use('/api/student', StudentRouter);
+app.use('/api/student', StudentRouter);
 app.use('/api/teacher', TeacherRouter);
 // app.use('/api/admin', AdminRouter);
 
