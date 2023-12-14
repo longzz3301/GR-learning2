@@ -956,6 +956,53 @@ const TeacherController = {
     }
   },
 
+  get_list_student : async (req , res , next) => {
+    const level = 1
+    const get_list_student = await Account.find({level :level })
+    const get_id = get_list_student.map((stu) =>stu.id)
+    console.log(get_id)
+    return res.send({ status: 200, success: true, msg: "get okay" });
+
+  },
+
+  
+
+  add_year_student: async (req, res, next) => {
+    try {
+       const  student_id = req.body.studentIds; // Đảm bảo rằng bạn lấy đúng trường từ req.body
+       const course_id = req.params.course_id;
+       console.log(course_id)
+ 
+       // Tìm các năm học dựa trên course_id
+       const get_year = await SchoolYear.find({ courseId: course_id });
+       const get_yearid = get_year.map((year) => year.id);
+ 
+       console.log(get_yearid);
+ 
+       // Cập nhật dữ liệu trong tài khoả
+       const updateData = {  course_id:course_id, }
+      
+      console.log("updateData :", updateData);
+      
+      const add_year = await Account.updateMany(
+        { _id: { $in: student_id } },
+        {
+          // Sử dụng $addToSet để thêm giá trị vào mảng nếu không tồn tại
+          $addToSet: { school_yearid: { $each: get_yearid } },
+          $set: updateData,
+        },
+        { upsert: true }
+      );
+      
+      console.log(add_year);
+ 
+       return res.send({ status: 200, success: true, msg: "Thành công" });
+    } catch (error) {
+       console.error(error);
+       return res.status(500).send({ status: 500, success: false, msg: "Lỗi server" });
+    }
+ }
+
   // create mark-Lecture
 
   // create mark-School Year

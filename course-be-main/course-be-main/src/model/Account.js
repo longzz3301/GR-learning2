@@ -15,31 +15,37 @@ const AccountModel = new Schema({
         type: String,
         // required: true
     },
-    dob: {
-        type: String,
-        // required: true
+    course_id : {
+        type: String 
+        
     },
-    phone: {
-        type: String,
-        // unique: true
-    },
-    sex: {
-        type: String
-    },
-    avatar: {
-        type: String
-    },
+
+    school_yearid : [String] ,
     level: {
         type: String,
         default: "1"
     },
+    // dob: {
+    //     type: String,
+    //     // required: true
+    // },
+    // phone: {
+    //     type: String,
+    //     // unique: true
+    // },
+    // sex: {
+    //     type: String
+    // },
+    // avatar: {
+    //     type: String
+    // },
     // verifyAccount: {
     //     type: Boolean,
     //     default: false
     // },
-    lectureID: {
-        type: String
-    }
+
+
+
     
     
 

@@ -13,10 +13,11 @@ const AccountController = {
                         email: email,
                         password: password,
                         fullname: '',
-                        phone: '',
-                        avatar: '',
-                        dob: '',
-                        sex: ''
+                        // phone: '',
+                        // avatar: '',
+                        // dob: '',
+                        // sex: ''
+                        coures_id:''
                     }
                     await Account(data).save();
                     return res.status(200).json({ success: true, msg: 'Register success', data: data });

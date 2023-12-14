@@ -47,14 +47,14 @@ router.get("/get-theory" ,TeacherController.getAllTheory )
 
 
 // post mark exam_topic 
-router.post('/createMark-topic/:course_id/:schoolyear_id/:lecture_id/:topic_id' , TeacherController.PostMark_topic)
+// router.post('/createMark-topic/:course_id/:schoolyear_id/:lecture_id/:topic_id' , TeacherController.PostMark_topic)
 
-router.post('/createMark-lecture' , TeacherController.PostMark_lecture)
+// router.post('/createMark-lecture' , TeacherController.PostMark_lecture)
 
 
-router.post('/createMark-year' , TeacherController.PostMark_year)
+// router.post('/createMark-year' , TeacherController.PostMark_year)
 
-router.post('/createMark/:course_id/:schoolyear_id/:lecture_id/:topic_id' , TeacherController.PostMark_topic)
+// router.post('/createMark/:course_id/:schoolyear_id/:lecture_id/:topic_id' , TeacherController.PostMark_topic)
 
 
 
@@ -62,6 +62,12 @@ router.post('/createMark/:course_id/:schoolyear_id/:lecture_id/:topic_id' , Teac
 // test create file excel 
 
 router.post('/create_file_excel/:topic_id' , upload.single("csvFile") , TeacherController.test_import_file)
+
+// add course => student 
+
+router.get('/get_list_student' , TeacherController.get_list_student)
+router.post('/add_year_student/:course_id' , TeacherController.add_year_student)
+
 
 // router.post('/create-course', upload_course.single('image'), TeacherController.postCreateCourse);
 // router.post('/edit-course', teacherRole, TeacherController.postEditCourse);

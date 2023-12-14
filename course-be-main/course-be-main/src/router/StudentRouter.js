@@ -11,6 +11,15 @@ const upload = require('../middleware/multerAvatar');
 
 
 
+//  get course & list course 
+router.get('/get_list_yearStu' , StudentController.get_list_yearStu)
+
+
+// get list lecture for stu 
+router.post('/get_lecture' , StudentController.get_lecture)
+
+// caculate mark after submit exam 
+router.post('/createMark-topic/:course_id/:schoolyear_id/:lecture_id/:topic_id' , StudentController.PostMark_topic)
 
 // router.get('/all-course', StudentController.getAllCourse);
 // // router.get('/course/lecture-detail/:course_slug/:slug',StudentController.getLectureDetail);
