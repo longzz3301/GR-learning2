@@ -24,6 +24,10 @@ router.get('/get_exam_theory' , StudentController.get_exam_theory)
 // caculate mark after submit exam 
 router.post('/createMark-topic/:course_id/:schoolyear_id/:lecture_id/:topic_id' , StudentController.PostMark_topic)
 
+// student check mark 
+
+router.get('/get_mark_topic' , StudentController.check_mark_stu)
+
 // router.get('/all-course', StudentController.getAllCourse);
 // // router.get('/course/lecture-detail/:course_slug/:slug',StudentController.getLectureDetail);
 // router.get('/course/lecture-detail/:slug',StudentController.getLectureDetail);

@@ -68,14 +68,6 @@ const TeacherController = {
         { new: true }
       );
 
-      // const updateCourse = await Course.findByIdAndUpdate(
-      //   courseId,
-      //   {
-      //     course_name: course_name,
-      //     course_description: course_description,
-      //   },
-      //   { new: true }
-      // );
       console.log("updateCourse :", updateCourse);
       return res.status(200).json({
         success: true,
@@ -211,51 +203,6 @@ const TeacherController = {
         msg: "course not exist !",
       });
     }
-
-    // if (checkCourse) {
-    //   const existingNameSchoolYear = await SchoolYear.findOne({
-    //     courseId: courseId,
-    //     nameSchoolYear: nameSchoolYear,
-    //   });
-
-    //   if (!existingNameSchoolYear) {
-    //     const checkLevel = await SchoolYear.findOne({
-    //       courseId: courseId,
-    //       level: level,
-    //     });
-    //     // console.log("getYear :", checkLevel);
-
-    //     if (!checkLevel) {
-    //       // check level ?
-    //       const data = {
-    //         nameSchoolYear: nameSchoolYear,
-
-    //         courseId: courseId,
-    //         level: level,
-    //       };
-    //       const createSchoolYear = await SchoolYear.create(data);
-    //       console.log(createSchoolYear);
-    //       return res
-    //         .status(200)
-    //         .json({ success: true, msg: "Thêm năm học thành công !" });
-    //     } else {
-    //       return res.status(300).json({
-    //         success: false,
-    //         msg: "level  error !",
-    //       });
-    //     }
-    //   } else {
-    //     return res.status(300).json({
-    //       success: false,
-    //       msg: "Name year exits !",
-    //     });
-    //   }
-    // } else {
-    //   return res.status(300).json({
-    //     success: false,
-    //     msg: "course not exist !",
-    //   });
-    // }
   },
 
   updateSchoolYears: async (req, res, next) => {
@@ -275,7 +222,7 @@ const TeacherController = {
           { id: id },
           {
             nameSchoolYear: nameSchoolYear,
-            level: level,
+            // level: level,
           },
           { new: true }
         );
@@ -502,6 +449,33 @@ const TeacherController = {
     }
   },
 
+  deleteTopic : async (req, res) => {
+    const {topic_id} = req.body
+    const check_topic = await TopicLecure.findById(topic_id)
+
+    if (check_topic) {
+
+      const delete_theory_topic = await theory.deleteMany({
+        Topic_id:topic_id
+      })
+      const delete_exam_topic = await Exercise.deleteMany({
+        topic_id: topic_id
+      })
+      
+      return res.status(200).json({
+        success: true,
+        msg: "update Topic thành công !",
+        "getTopic :": getTopic,
+      });
+    }
+
+    return res
+    .status(300)
+    .json({ success: false, msg: " error topic not found !" });
+  },
+
+
+
   // CRUD theory
 
   postCreateTheory: async (req, res, next) => {
@@ -702,21 +676,19 @@ const TeacherController = {
         const optionsUpdateMarkTopic = { upsert: true };
 
         const updatemark_topic = await Mark_Topic.updateOne(
-            filterUpdateMarkTopic,
-            updateMarkTopic,
-            optionsUpdateMarkTopic
+          filterUpdateMarkTopic,
+          updateMarkTopic,
+          optionsUpdateMarkTopic
         );
-        
-    } else {
+      } else {
         // Tạo mới mark cho topic nếu chưa tồn tại
         const createMark_topic = await Mark_Topic.create({
-            mark: mark,
-            exam_id: exam_id,
-            student_id: student_id,
-            topic_id: topic_id,
+          mark: mark,
+          exam_id: exam_id,
+          student_id: student_id,
+          topic_id: topic_id,
         });
-       
-    }
+      }
       // caculate mark lecture
 
       const get_lecture_ids = lecture_id;
@@ -786,7 +758,7 @@ const TeacherController = {
         updateMarkYear,
         optionsMarkYear
       );
-        
+
       console.log("caculate mark year", resultMarkYear);
 
       return res.status(200).json({
@@ -906,11 +878,13 @@ const TeacherController = {
     });
   },
 
-  test_import_file: async (req, res, next) => {
+  // add file exam = csv 
+
+  test_import_fileExam: async (req, res, next) => {
     try {
       const { topic_id } = req.params;
       const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-      // Chọn trang tính đầu tiên từ workbook (nếu có nhiều trang tính)
+      // Chọn trang tính đầu tiên từ workbook
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       // Chuyển đổi dữ liệu từ trang tính thành mảng JSON
@@ -956,34 +930,83 @@ const TeacherController = {
     }
   },
 
-  get_list_student : async (req , res , next) => {
-    const level = 1
-    const get_list_student = await Account.find({level :level })
-    const get_id = get_list_student.map((stu) =>stu.id)
-    console.log(get_id)
-    return res.send({ status: 200, success: true, msg: "get okay" });
+  // add file theory = csv 
+  test_import_fileTheory: async (req, res, next) => {
+    try {
+      const { topic_id } = req.params;
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      console.log("workbook: " , workbook)
+      // Chọn trang tính đầu tiên từ workbook
+      const sheetName = workbook.SheetNames[0];
 
+      const worksheet = workbook.Sheets[sheetName];
+
+      // Chuyển đổi dữ liệu từ trang tính thành mảng JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      // In ra mảng JSON
+      console.log(jsonData);
+      const checkTopicId = await TopicLecure.findOne({ id: topic_id });
+      const Theoryinitial = [];
+      for (const item of jsonData) {
+        const Theory = {
+          questionName: item["Question Name"],
+          correctAnswer: item.correct_answer,
+        };
+        Theoryinitial.push(Theory);
+      }
+      if (topic_id === null) {
+        return res.status(300).json({
+          success: false,
+          msg: "  topic k ton tai !",
+        });
+      }
+      const checkExam = await Theory.findOne({ topic_id: topic_id });
+      if (checkExam === null) {
+        const TheoryCR = await Theory.create({
+          topic_id: topic_id,
+          Theory: Theoryinitial,
+        });
+        // await exercise.save();
+        console.log("Dữ liệu thêm thành công.");
+        return res.send({ status: 200, success: true, msg: "Run okay" });
+      }
+      const updateTheory = await Theory.findOneAndUpdate(
+        { topic_id: topic_id },
+        { $set: { Theory: Theoryinitial } }
+      );
+      return res.send({ status: 200, success: true, msg: "update okay" });
+    } catch (error) {
+      res.send({ status: 400, success: false, msg: error.message });
+    }
   },
 
   
+  
+
+  get_list_student: async (req, res, next) => {
+    const level = 1;
+    const get_list_student = await Account.find({ level: level });
+    const get_id = get_list_student.map((stu) => stu.id);
+    console.log(get_id);
+    return res.send({ status: 200, success: true, msg: "get okay" });
+  },
 
   add_year_student: async (req, res, next) => {
     try {
-       const  student_id = req.body.studentIds; // Đảm bảo rằng bạn lấy đúng trường từ req.body
-       const course_id = req.params.course_id;
-       console.log(course_id)
- 
-       // Tìm các năm học dựa trên course_id
-       const get_year = await SchoolYear.find({ courseId: course_id });
-       const get_yearid = get_year.map((year) => year.id);
- 
-       console.log(get_yearid);
- 
-       // Cập nhật dữ liệu trong tài khoả
-       const updateData = {  course_id:course_id, }
-      
+      const student_id = req.body.studentIds;
+      const course_id = req.params.course_id;
+      console.log(course_id);
+
+      const get_year = await SchoolYear.find({ courseId: course_id });
+      const get_yearid = get_year.map((year) => year.id);
+
+      console.log(get_yearid);
+
+      const updateData = { course_id: course_id };
+
       console.log("updateData :", updateData);
-      
+
       const add_year = await Account.updateMany(
         { _id: { $in: student_id } },
         {
@@ -993,15 +1016,29 @@ const TeacherController = {
         },
         { upsert: true }
       );
-      
+
       console.log(add_year);
- 
-       return res.send({ status: 200, success: true, msg: "Thành công" });
+
+      return res.send({ status: 200, success: true, msg: "Thành công" });
     } catch (error) {
-       console.error(error);
-       return res.status(500).send({ status: 500, success: false, msg: "Lỗi server" });
+      console.error(error);
+      return res
+        .status(500)
+        .send({ status: 500, success: false, msg: "Lỗi server" });
     }
- }
+  },
+
+  //  get_list_stuInCourse : async (req, res, next) => {
+  //     const {course_id} = req.body
+  //     const find_stu = await Account.find({course_id:course_id})
+  //     const find_mark = await Mark_Year.findOne
+
+  //  }
+
+  // get_list_markstu_year: async (req, res, next) => {
+  //   const { school_yearid } = req.body;
+  //   const { courseId } = req.params;
+  // },
 
   // create mark-Lecture
 

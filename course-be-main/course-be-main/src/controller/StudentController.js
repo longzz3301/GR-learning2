@@ -13,6 +13,8 @@ const SchoolYear = require("../model/SchoolYear");
 const Mark_Year = require("../model/Mark_Year");
 const TopicLecure = require("../model/TopicLecure");
 const theory = require("../model/theory");
+const mark_Lecture = require("../model/mark_Lecture");
+const Mark_Topic = require("../model/Mark_Topic");
 const StudentController = {
   PostMark_topic: async (req, res, next) => {
     try {
@@ -231,62 +233,152 @@ const StudentController = {
     });
   },
 
-  get_topic :  async (req, res, next) => {
-    const Lecture_id = req.body
-    const checkLecture = await Lecture.findById(Lecture_id)
+  get_topic: async (req, res, next) => {
+    const Lecture_id = req.body;
+    const checkLecture = await Lecture.findById(Lecture_id);
 
     if (!checkLecture) {
       return res.status(300).json({
         success: false,
         msg: "not found lecture",
       });
-
     }
 
     const list_topic = await TopicLecure.findOne({
-      Lecture_ID:Lecture_id
-    })
+      Lecture_ID: Lecture_id,
+    });
 
     return res.status(200).json({
       success: true,
       msg: "get list topic success !",
-      list_topic: list_topic
+      list_topic: list_topic,
     });
   },
 
-  get_exam_theory : async (req, res, next) => {
+  get_exam_theory: async (req, res, next) => {
     // const token_decode = jwt_decode(token);
     // const student = token_decode.email
     // const getstudentId = await Account.findOne({email:student})
     // const studentId = getstudentId.id // student id qua token
     try {
-      const {topic_id} = req.body
-      const check_topic = await TopicLecure.findById(topic_id)
-  
+      const { topic_id } = req.body;
+      const check_topic = await TopicLecure.findById(topic_id);
+
       if (!topic_id) {
         return res.status(300).json({
           success: false,
           msg: "not found topic",
         });
       }
-  
-      const get_theory = await theory.findOne({Topic_id:topic_id})
-      const get_exam = await Exercise.findOne({topic_id:topic_id})
+
+      const get_theory = await theory.findOne({ Topic_id: topic_id });
+      const get_exam = await Exercise.findOne({ topic_id: topic_id });
       return res.status(200).json({
         success: true,
         msg: "get list topic success !",
-        list_theory : get_theory,
-        list_exam : get_exam
+        list_theory: get_theory,
+        list_exam: get_exam,
       });
-      
     } catch (error) {
       return res.status(300).json({
         success: false,
         msg: error.message,
       });
     }
+  },
 
-  }
+  check_mark_stu: async (req, res, next) => {
+    // const token_decode = jwt_decode(token);
+    // const student = token_decode.email
+    // const getstudentId = await Account.findOne({email:student})
+    // const studentId = getstudentId.id // student id qua token
+    const { student_id } = req.body;
+    const get_student = await Account.findById(student_id);
+    if (!get_student) {
+      return res.status(300).json({
+        success: false,
+        msg: "user error",
+      });
+    }
+    // get mark stu _ topic
+    const find_mark_topic = await Mark_Topic.find({
+      student_id: student_id,
+    });
+
+    const get_id = find_mark_topic.map((get) => (topic_id = get.id));
+    // console.log(get_id)
+    const get_topic = await TopicLecure.find({
+      id: { $in: get_id },
+    });
+    const stu_mark_topic = find_mark_topic.map((mark) => {
+      const mark_topic = get_topic.find((topic) => topic.id === mark.topic_id);
+
+      return {
+        Nametopic: mark_topic ? mark_topic.TopicName : null,
+        mark: mark.mark,
+        createdAt: mark.createdAt,
+        updatedAt: mark.updatedAt,
+        exam_id: mark.exam_id,
+      };
+    });
+
+    // get mark lecture
+
+    const find_mark_lec = await mark_Lecture.find({
+      student_id: student_id,
+    });
+
+    console.log("find_mark_lec :", find_mark_lec);
+
+    const get_lecture_ids = find_mark_lec.map((get) => (id = get.Lecture_ID));
+    const find_lecture = await Lecture.find({
+      id: { $in: get_lecture_ids },
+    });
+
+    console.log("find_lecture :", find_lecture);
+
+    const stu_mark_Lecture = find_mark_lec.map((markLec) => {
+      const mark_Lecture = find_lecture.find(
+        (lecture) => lecture.id === markLec.Lecture_ID
+      );
+
+      return {
+        _id: markLec.id,
+        mark: markLec.mark,
+        name_lecture: mark_Lecture ? mark_Lecture.nameLecture : null,
+      };
+    });
+
+    // get mark_year
+    const find_mark_year = await Mark_Year.find({
+      student_id: student_id,
+    });
+
+    const get_yearid = find_mark_year.map((get) => (id = get.id));
+    const get_nameYear = await SchoolYear.find({
+      id: { $in: get_yearid },
+    });
+
+    const stu_mark_year = find_mark_year.map((markYear) => {
+      const mark_year = get_nameYear.find(
+        (year) => year.id === markYear.SchoolYearsID
+      );
+
+      return {
+        name_schoolyear: mark_year.nameSchoolYear,
+        mark: markYear.mark,
+        createAt: markYear.createdAt,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      msg: "get list topic success !",
+      stu_mark_topic: stu_mark_topic,
+      stu_mark_Lecture: stu_mark_Lecture,
+      stu_mark_year: stu_mark_year,
+    });
+  },
 
   // getAllCourse: async (req, res, next) => {
   //     await Course.find({ course_status: true }).sort({ createdAt: -1 }).limit(3).lean().then(async courses => {
